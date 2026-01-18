@@ -19,7 +19,7 @@ const toggleVisibility = () => {
 </script>
 
 <template>
-  <div v-e="['c:nocodb:chat-support']" class="nc-mini-sidebar-btn-full-width" data-testid="nc-sidebar-chat-support">
+  <!-- <div v-e="['c:nocodb:chat-support']" class="nc-mini-sidebar-btn-full-width" data-testid="nc-sidebar-chat-support">
     <div
       class="nc-mini-sidebar-btn relative"
       :class="{
@@ -29,5 +29,6 @@ const toggleVisibility = () => {
     >
       <GeneralIcon icon="ncSupportAgent" class="h-4.5 w-4.5" />
     </div>
-  </div>
+  </div> -->
+  <div></div>
 </template>

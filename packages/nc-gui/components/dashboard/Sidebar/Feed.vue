@@ -12,7 +12,7 @@ const { isNewFeedAvailable } = useProductFeed()
 const gotoFeed = () => navigateToFeed()
 </script>
 
-<template>
+<!-- <template>
   <div
     v-if="isMiniSidebar"
     v-e="['c:nocodb:feed']"
@@ -62,7 +62,7 @@ const gotoFeed = () => navigateToFeed()
       </div>
     </div>
   </NcButton>
-</template>
+</template> -->
 
 <style scoped lang="scss">
 @keyframes pulse {

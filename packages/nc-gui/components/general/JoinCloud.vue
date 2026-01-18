@@ -67,7 +67,7 @@ const onMouseover = async () => {
 </script>
 
 <template>
-  <div class="flex flex-row items-center w-full bg-white rounded-lg border-1 border-brand-500 shadow-sm mb-0.5 overflow-hidden">
+  <!-- <div class="flex flex-row items-center w-full bg-white rounded-lg border-1 border-brand-500 shadow-sm mb-0.5 overflow-hidden">
     <a
       v-e="['c:navbar:join-cloud']"
       class="flex flex-grow !no-underline items-center justify-center border-r-1 h-full hover:bg-gray-100"
@@ -129,7 +129,8 @@ const onMouseover = async () => {
         </div>
       </template>
     </a-tooltip>
-  </div>
+  </div> -->
+  <div></div>
 </template>
 
 <style lang="scss" scoped>

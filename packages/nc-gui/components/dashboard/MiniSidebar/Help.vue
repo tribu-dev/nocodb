@@ -136,7 +136,7 @@ const openUrl = (item: ItemType) => {
 </script>
 
 <template>
-  <div class="nc-mini-sidebar-btn-full-width">
+  <!-- <div class="nc-mini-sidebar-btn-full-width">
     <NcDropdown v-model:visible="visible" :placement="isMobileMode ? 'topRight' : 'right'" overlay-class-name="!min-w-55">
       <div class="w-full py-1 flex items-center justify-center">
         <div
@@ -195,5 +195,6 @@ const openUrl = (item: ItemType) => {
         </NcMenu>
       </template>
     </NcDropdown>
-  </div>
+  </div> -->
+  <div></div>
 </template>

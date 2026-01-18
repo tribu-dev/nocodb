@@ -7,11 +7,11 @@ const { appInfo } = useGlobal()
 <template>
   <div v-if="isMiniSidebar" class="nc-mini-sidebar-btn-full-width">
     <div data-testid="nc-workspace-menu" class="nc-workspace-menu nc-mini-sidebar-ws-item">
-      <a href="https://github.com/nocodb/nocodb" target="_blank" rel="noopener noreferrer">
+      <a href="https://www.tribu.dev/" target="_blank" rel="noopener noreferrer">
         <NcTooltip :disabled="!appInfo?.version || isEeUI" placement="right" hide-on-click>
           <template #title>{{ appInfo?.version }}</template>
 
-          <GeneralWorkspaceIcon
+          <!-- <GeneralWorkspaceIcon
             :workspace="{
               id: 'nc',
               meta: {},
@@ -20,7 +20,8 @@ const { appInfo } = useGlobal()
             show-nocodb-icon
             class="flex-none border-1 border-nc-border-gray-medium"
             size="mini-sidebar"
-          />
+          /> -->
+          <img alt="Tribu" src="~/assets/img/brand/nocodb-logo.svg" class="flex-none w-8 h-8" />
         </NcTooltip>
       </a>
     </div>

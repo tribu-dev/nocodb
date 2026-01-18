@@ -43,7 +43,7 @@ const copySharedBase = async () => {
 </script>
 
 <template>
-  <div
+  <!-- <div
     v-if="!isSharedBase && isUIAllowed('baseShare') && visibility !== 'hidden' && (activeTable || base)"
     class="nc-share-base-button flex flex-col justify-center"
     data-testid="share-base-button"
@@ -86,7 +86,7 @@ const copySharedBase = async () => {
         </NcButton>
       </div>
     </div>
-  </template>
+  </template> -->
 
   <LazyDlgShareAndCollaborateView :is-view-toolbar="isViewToolbar" />
 </template>
