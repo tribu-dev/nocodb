@@ -22,36 +22,39 @@ services:
     depends_on: 
       root_db: 
         condition: service_healthy
-    environment: 
-      NC_DB: "mysql2://root_db:3306?u=noco&p=password&d=root_db"
-    image: "nocodb/nocodb:latest"
-    networks: 
-      - default
-      - nginxproxy
-    restart: always
-    volumes: 
-      - "nc_data:/usr/app/data"
-  root_db: 
-    environment: 
-      MYSQL_DATABASE: root_db
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_USER: noco
-    healthcheck: 
-      retries: 10
-      test: 
-        - CMD
-        - mysqladmin
-        - ping
-        - "-h"
-        - localhost
-      timeout: 20s
-    image: "mysql:8.3.0"
-    networks: 
-      - default
-    restart: always
-    volumes: 
-      - "db_data:/var/lib/mysql"
+      environment:
+        NC_DB: "mysql2://root_db:3306?u=noco&p=password&d=root_db"
+      build:
+        context: ../../
+        dockerfile: packages/nocodb/Dockerfile.local
+      networks:
+        - default
+        - nginxproxy
+      restart: always
+      volumes:
+        - ../../:/usr/app
+        - "nc_data:/usr/app/data"
+    root_db: 
+      environment: 
+        MYSQL_DATABASE: root_db
+        MYSQL_PASSWORD: password
+        MYSQL_ROOT_PASSWORD: password
+        MYSQL_USER: noco
+      healthcheck: 
+        retries: 10
+        test: 
+          - CMD
+          - mysqladmin
+          - ping
+          - "-h"
+          - localhost
+        timeout: 20s
+      image: "mysql:8.3.0"
+      networks: 
+        - default
+      restart: always
+      volumes: 
+        - "db_data:/var/lib/mysql"
 volumes: 
   db_data: {}
   nc_data: {}
