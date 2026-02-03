@@ -15,6 +15,10 @@ services:
     volumes:
       - ../../:/usr/app
       - "nc_data:/usr/app/data"
+    # Add network configuration
+    networks:
+      - nocodb_network
+
   root_db: 
     environment: 
       POSTGRES_DB: root_db
@@ -29,6 +33,14 @@ services:
     restart: always
     volumes: 
       - "db_data:/var/lib/postgresql/data"
+    # Add network configuration
+    networks:
+      - nocodb_network
 volumes: 
   db_data: {}
   nc_data: {}
+
+# Add network definition
+networks:
+  nocodb_network:
+    driver: bridge
