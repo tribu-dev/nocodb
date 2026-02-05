@@ -10,6 +10,6 @@ const item = toRef(props, 'item')
 
 <template>
   <NotificationItemWrapper :item="item">
-    <div>Welcome to <span class="font-semibold">NocoDB!</span> We’re excited to have you onboard.</div>
+    <div>Bienvenido a <span class="font-semibold">Lizz Dress!</span> Estamos emocionados de tenerte a bordo.</div>
   </NotificationItemWrapper>
 </template>
