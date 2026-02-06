@@ -70,4 +70,4 @@ if use_litestream ; then
 fi
 
 # start NocoDB
-node docker/main.js
+node packages/nocodb/docker/main.js
