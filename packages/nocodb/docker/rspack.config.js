@@ -45,6 +45,10 @@ module.exports = {
         ],
     },
     resolve: {
+        alias: {
+            '~': path.resolve(__dirname, '../src'),
+            'nc-gui': path.resolve(__dirname, '../../nc-gui'),
+        },
         extensions: ['.tsx', '.ts', '.js', '.json'],
         tsConfig: {
             configFile: path.resolve('tsconfig.json'),
@@ -75,6 +79,7 @@ module.exports = {
     },
     externals: [
         nodeExternals({
+            modulesDir: path.resolve(__dirname, '../../../node_modules'),
             allowlist: ['nocodb-sdk'],
         }),
     ],

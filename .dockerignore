@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+.git
+.github
+dist
+**/dist
+.nuxt
+**/.nuxt
+.output
+**/.output
+*.db
+*.log

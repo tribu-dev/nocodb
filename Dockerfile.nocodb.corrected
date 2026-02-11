@@ -1,0 +1,150 @@
+# NocoDB Dockerfile based on reverse engineering analysis
+# This Dockerfile recreates the NocoDB image based on the analysis of the official image
+FROM debian:bookworm-slim
+
+# Set environment variables
+ENV NODE_VERSION=22.20.0
+ENV YARN_VERSION=1.22.22
+ENV LITESTREAM_S3_SKIP_VERIFY=false
+ENV LITESTREAM_RETENTION=1440h
+ENV LITESTREAM_RETENTION_CHECK_INTERVAL=72h
+ENV LITESTREAM_SNAPSHOT_INTERVAL=24h
+ENV LITESTREAM_SYNC_INTERVAL=60s
+ENV NC_DOCKER=0.6
+ENV NC_TOOL_DIR=/usr/app/data/
+ENV NODE_ENV=production
+ENV PORT=8080
+
+# Determine architecture for Node.js download
+RUN set -ex \
+    && ARCH=$(dpkg --print-architecture) \
+    && case "${ARCH}" in \
+        amd64) export ARCH='x64' OPENSSL_ARCH='linux-x86_64';; \
+        ppc64el) export ARCH='ppc64le' OPENSSL_ARCH='linux-ppc64le';; \
+        s390x) export ARCH='s390x' OPENSSL_ARCH='linux-s390x';; \
+        arm64) export ARCH='arm64' OPENSSL_ARCH='linux-aarch64';; \
+        armhf) export ARCH='armv7l' OPENSSL_ARCH='linux-armv4';; \
+        i386) export ARCH='x86' OPENSSL_ARCH='linux-elf';; \
+        *) echo "unsupported architecture"; exit 1 ;; \
+    esac \
+    && savedAptMark="$(apt-mark showmanual)" \
+    && apt-get update && apt-get install -y ca-certificates curl wget gnupg dirmngr xz-utils libatomic1 --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && export GNUPGHOME="$(mktemp -d)" \
+    && for key in \
+        5BE8A3F6C8A5C01D106C0AD820B1A390B168D356 \
+        DD792F5973C6DE52C432CBDAC77ABFA00DDBF2B7 \
+        CC68F5A3106FF448322E48ED27F5E38D5B0A215F \
+        8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600 \
+        890C08DB8579162FEE0DF9DB8BEAB4DFCF555EF4 \
+        C82FA3AE1CBEDC6BE46B9360C43CEC45C17AB93C \
+        108F52B48DB57BB0CC439B2997B01419BD92F80A \
+        A363A499291CBBC940DD62E41F10027AF002F8B0 \
+    ; do \
+        { gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys "$key" && gpg --batch --fingerprint "$key"; } || \
+        { gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key" && gpg --batch --fingerprint "$key"; } ; \
+    done \
+    && curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH.tar.xz" \
+    && curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc" \
+    && gpg --batch --decrypt --output SHASUMS256.txt SHASUMS256.txt.asc \
+    && gpgconf --kill all \
+    && rm -rf "$GNUPGHOME" \
+    && grep " node-v$NODE_VERSION-linux-$ARCH.tar.xz\$" SHASUMS256.txt | sha256sum -c - \
+    && tar -xJf "node-v$NODE_VERSION-linux-$ARCH.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
+    && rm "node-v$NODE_VERSION-linux-$ARCH.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt \
+    && find /usr/local/include/node/openssl/archs -mindepth 1 -maxdepth 1 ! -name "$OPENSSL_ARCH" -exec rm -rf {} \; \
+    && apt-mark auto '.*' > /dev/null \
+    && find /usr/local -type f -executable -exec ldd '{}' ';' \
+        | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); print so }' \
+        | sort -u \
+        | xargs -r dpkg-query --search \
+        | cut -d: -f1 \
+        | sort -u \
+        | xargs -r apt-mark manual \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && ln -s /usr/local/bin/node /usr/local/bin/nodejs \
+    && node --version \
+    && npm --version \
+    && rm -rf /tmp/*
+
+# Install Yarn
+RUN set -ex \
+    && savedAptMark="$(apt-mark showmanual)" \
+    && apt-get update && apt-get install -y ca-certificates curl wget gnupg dirmngr --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && export GNUPGHOME="$(mktemp -d)" \
+    && for key in \
+        6A010C5166006599AA17F08146C2130DFD2497F5 \
+    ; do \
+        { gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys "$key" && gpg --batch --fingerprint "$key"; } || \
+        { gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key" && gpg --batch --fingerprint "$key"; } ; \
+    done \
+    && curl -fsSLO --compressed "https://yarnpkg.com/downloads/$YARN_VERSION/yarn-v$YARN_VERSION.tar.gz" \
+    && curl -fsSLO --compressed "https://yarnpkg.com/downloads/$YARN_VERSION/yarn-v$YARN_VERSION.tar.gz.asc" \
+    && gpg --batch --verify yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz \
+    && gpgconf --kill all \
+    && rm -rf "$GNUPGHOME" \
+    && mkdir -p /opt \
+    && tar -xzf yarn-v$YARN_VERSION.tar.gz -C /opt/ \
+    && ln -s /opt/yarn-v$YARN_VERSION/bin/yarn /usr/local/bin/yarn \
+    && ln -s /opt/yarn-v$YARN_VERSION/bin/yarnpkg /usr/local/bin/yarnpkg \
+    && rm yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz \
+    && apt-mark auto '.*' > /dev/null \
+    && { [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark > /dev/null; } \
+    && find /usr/local -type f -executable -exec ldd '{}' ';' \
+        | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); print so }' \
+        | sort -u \
+        | xargs -r dpkg-query --search \
+        | cut -d: -f1 \
+        | sort -u \
+        | xargs -r apt-mark manual \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && yarn --version \
+    && rm -rf /tmp/*
+
+# Create node user
+RUN groupadd --gid 1000 node \
+    && useradd --uid 1000 --gid node --shell /bin/bash --create-home node
+
+# Install additional system utilities
+RUN apt-get update && apt-get install -y \
+    dumb-init \
+    curl \
+    wget \
+    && curl -L "https://github.com/TomWright/dasel/releases/download/v2.8.1/dasel_linux_$(dpkg --print-architecture)" -o /usr/local/bin/dasel \
+    && chmod +x /usr/local/bin/dasel \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy application files (placeholder - in real scenario, these would be the actual NocoDB files)
+# Note: In a real build, these would come from the build process
+COPY app/ /usr/src/app/
+
+# Copy entry scripts (placeholder - in real scenario, these would be the actual startup scripts)
+COPY appEntry/ /usr/src/appEntry/
+
+# Copy docker entrypoint script (placeholder - in real scenario, this would be the actual script)
+COPY docker-entrypoint.sh /usr/local/bin/
+
+# Copy litestream binary (placeholder - in real scenario, this would be the actual binary)
+COPY lt /usr/local/bin/litestream
+
+# Copy litestream configuration
+COPY litestream.yml /etc/litestream.yml
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Change ownership to node user
+RUN chown -R node:node /usr/src/app /usr/src/appEntry /usr/app/data/ /usr/local/bin/docker-entrypoint.sh
+
+# Switch to node user
+USER node
+
+# Expose port
+EXPOSE 8080
+
+# Set entrypoint and command
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/usr/src/appEntry/start.sh"]
+
+LABEL service="nocodb"

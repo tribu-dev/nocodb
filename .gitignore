@@ -97,6 +97,11 @@ httpbin
 /packages/nc-secret-mgr/dist/index.js.map
 
 # nix
+
 result
 
+
+
 .cursorignore
+
+*.env
